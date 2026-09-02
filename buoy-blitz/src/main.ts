@@ -55,6 +55,7 @@ async function createGame() {
   const quality = optQuality.value as QualityLevel;
   localStorage.setItem('buoy-quality', quality);
   game = new Game(canvas, physics, quality, hud, audio);
+  (window as unknown as { __buoyBlitz: Game }).__buoyBlitz = game;
   game.onMatchEnd = (r) => {
     hud.show(false);
     showResult(r);

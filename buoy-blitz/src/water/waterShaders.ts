@@ -207,7 +207,7 @@ void main() {
   float fogF = 1.0 - exp(-uFogDensity * uFogDensity * dist * dist);
   color = mix(color, uFogColor, clamp(fogF, 0.0, 1.0));
 
-  gl_FragColor = vec4(color, 1.0);
+  gl_FragColor = vec4(clamp(color, vec3(0.0), vec3(12.0)), 1.0);
 }
 `;
 
@@ -260,8 +260,9 @@ precision highp float;
 uniform sampler2D tDiffuse;
 uniform highp sampler2D tDepth;
 varying vec2 vUv;
+layout(location = 0) out highp vec4 fragColor;
 void main() {
-  gl_FragColor = texture2D(tDiffuse, vUv);
+  fragColor = texture2D(tDiffuse, vUv);
   gl_FragDepth = texture2D(tDepth, vUv).r;
 }
 `;

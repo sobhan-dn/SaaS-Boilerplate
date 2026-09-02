@@ -29,7 +29,7 @@ export class BoostPads {
   constructor(scene: THREE.Scene) {
     this.bigMat = new THREE.MeshStandardMaterial({ color: 0xffb02a, emissive: 0xffa020, emissiveIntensity: 1.6, roughness: 0.4 });
     this.smallMat = new THREE.MeshStandardMaterial({ color: 0xffe08a, emissive: 0xffc850, emissiveIntensity: 1.2, roughness: 0.4 });
-    this.coreMat = new THREE.MeshStandardMaterial({ color: 0xfff5cc, emissive: 0xffe9a0, emissiveIntensity: 2.5, transparent: true, opacity: 0.9 });
+    this.coreMat = new THREE.MeshStandardMaterial({ color: 0xfff5cc, emissive: 0xffe9a0, emissiveIntensity: 1.1, transparent: true, opacity: 0.9 });
 
     const layout: [number, number, boolean][] = [];
     // big pads: 4 corners-ish + 2 mid-sides (mirrors the classic layout)
@@ -62,7 +62,7 @@ export class BoostPads {
     ring.rotation.x = Math.PI / 2;
     ring.castShadow = true;
     mesh.add(ring);
-    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(big ? 0.55 : 0.3, 1), this.coreMat);
+    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(big ? 0.42 : 0.22, 1), this.coreMat);
     core.position.y = big ? 1.2 : 0.7;
     mesh.add(core);
     const light = new THREE.Mesh(

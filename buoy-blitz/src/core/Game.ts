@@ -163,11 +163,11 @@ export class Game {
 
   private placeKickoff() {
     const spots: [number, number][] = [
-      [-10.5, -33],
-      [10.5, -33],
-      [0, -38.5],
-      [-16, -37],
-      [16, -37],
+      [-10, -31],
+      [10, -31],
+      [0, -36],
+      [-14, -34],
+      [14, -34],
     ];
     const pick = [0, 1, 2, 3, 4].sort(() => Math.random() - 0.5).slice(0, 2);
     for (let i = 0; i < 4; i++) {
@@ -485,6 +485,7 @@ export class Game {
     // ---- visuals
     const simTime = this.time + this.accumulator;
     this.water.update(simTime, this.rig.camera);
+    this.env.update(simTime);
     this.arena.update(simTime, dt);
     this.pads.update(dt, simTime, this.boats, this.fx);
     this.decorations.update(simTime);

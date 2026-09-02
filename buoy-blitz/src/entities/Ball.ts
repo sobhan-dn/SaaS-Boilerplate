@@ -270,8 +270,12 @@ export class Ball {
     this.submerged = f;
     const m = BALL.mass;
     if (f > 0) {
-      const lift = (m * GRAVITY * f) / BALL.restSubmersion;
-      const damp = -m * 2.4 * this.velocity.y * f;
+      // linear Archimedes term plus a strong extra push when the ball is driven deep under the surface,
+      // so a beach ball pops back up quickly instead of sinking out of play
+      const deep = THREE.MathUtils.clamp((h - this.position.y) / rb, 0, 4);
+      const lift = (m * GRAVITY * f) / BALL.restSubmersion + m * GRAVITY * deep * 1.6;
+      const dampCoeff = this.velocity.y < 0 ? 2.4 : 0.7;
+      const damp = -m * dampCoeff * this.velocity.y * f;
       // buoyancy acts at the centre of the submerged cap, a little below the ball centre
       const cob = this.tmp.set(this.position.x, this.position.y - rb * 0.35 * (1 - f), this.position.z);
       b.addForceAtPoint({ x: 0, y: lift + damp, z: 0 }, { x: cob.x, y: cob.y, z: cob.z }, true);

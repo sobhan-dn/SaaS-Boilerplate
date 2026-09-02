@@ -43,7 +43,7 @@ export class GameRenderer {
     this.renderer.setPixelRatio(quality.pixelRatio);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 0.92;
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
@@ -64,7 +64,7 @@ export class GameRenderer {
     this.composer = new EffectComposer(this.renderer, compositeRT);
 
     if (quality.bloom) {
-      this.composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.42, 0.55, 0.92));
+      this.composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.38, 0.5, 1.45));
     }
     this.composer.addPass(new OutputPass());
     if (quality.fxaa) this.composer.addPass(new FXAAPass());

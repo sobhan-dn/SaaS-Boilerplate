@@ -99,11 +99,11 @@ export class Boat {
     this.wake = new Trail({
       maxPoints: 60,
       life: 2.6,
-      startWidth: 1.4,
-      endWidth: 4.2,
+      startWidth: 1.0,
+      endWidth: 3.2,
       onSurface: true,
       minSpacing: 0.35,
-      material: makeTrailMaterial(wakeTexture, new THREE.Color(1, 1, 1), false, 0.75),
+      material: makeTrailMaterial(wakeTexture, new THREE.Color(1, 1, 1), false, 0.42),
     });
     scene.add(this.wake.mesh);
   }

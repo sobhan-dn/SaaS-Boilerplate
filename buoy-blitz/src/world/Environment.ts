@@ -25,17 +25,64 @@ export class Environment {
     su.mieCoefficient.value = 0.0045;
     su.mieDirectionalG.value = 0.86;
     su.sunPosition.value.copy(this.sunDir);
+    if (su.cloudCoverage) {
+      su.cloudCoverage.value = 0.38;
+      su.cloudDensity.value = 0.45;
+      su.cloudScale.value = 0.00025;
+      su.cloudSpeed.value = 0.02;
+    }
+    // The sky is rendered into HDR half-float targets; clamp the sun disc so it cannot overflow to inf/NaN.
+    this.sky.material.fragmentShader = this.sky.material.fragmentShader.replace(
+      'gl_FragColor = vec4( texColor, 1.0 );',
+      'gl_FragColor = vec4( min( texColor, vec3( 3.0 ) ), 1.0 );',
+    );
+    this.sky.material.needsUpdate = true;
 
+    // The environment map comes from a clamped analytic dome: the atmospheric Sky shader can overflow
+    // half-float range around the sun disk, which turns the whole PMREM into NaN on some GPUs.
     const pmrem = new THREE.PMREMGenerator(renderer);
     const envScene = new THREE.Scene();
-    envScene.add(this.sky);
-    const envRT = pmrem.fromScene(envScene, 0, 0.1, 3000);
+    const domeMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      uniforms: {
+        uZenith: { value: new THREE.Color(0.16, 0.38, 0.82) },
+        uHorizon: { value: new THREE.Color(0.72, 0.82, 0.92) },
+        uGround: { value: new THREE.Color(0.08, 0.22, 0.3) },
+        uSunDir: { value: this.sunDir.clone() },
+        uSunColor: { value: new THREE.Color(1.0, 0.92, 0.78) },
+      },
+      vertexShader: /* glsl */ `
+        varying vec3 vDir;
+        void main() {
+          vDir = (modelMatrix * vec4(position, 1.0)).xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        varying vec3 vDir;
+        uniform vec3 uZenith, uHorizon, uGround, uSunDir, uSunColor;
+        void main() {
+          vec3 d = normalize(vDir);
+          float t = clamp(d.y, -1.0, 1.0);
+          vec3 col = t >= 0.0 ? mix(uHorizon, uZenith, pow(t, 0.55)) : mix(uHorizon, uGround, pow(-t, 0.4));
+          float cosSun = max(dot(d, uSunDir), 0.0);
+          col += uSunColor * (pow(cosSun, 400.0) * 8.0 + pow(cosSun, 10.0) * 0.35);
+          gl_FragColor = vec4(min(col, vec3(16.0)), 1.0);
+        }
+      `,
+    });
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(500, 32, 16), domeMat);
+    envScene.add(dome);
+    const envRT = pmrem.fromScene(envScene, 0, 1, 2000);
     scene.environment = envRT.texture;
-    scene.environmentIntensity = 0.75;
+    scene.environmentIntensity = 0.7;
     pmrem.dispose();
+    dome.geometry.dispose();
+    domeMat.dispose();
     scene.add(this.sky);
 
-    this.sun = new THREE.DirectionalLight(0xfff1dc, 3.4);
+    this.sun = new THREE.DirectionalLight(0xfff1dc, 3.0);
     this.sun.position.copy(this.sunDir).multiplyScalar(160);
     this.sun.target.position.set(0, 0, 0);
     this.sun.castShadow = quality.shadows;
@@ -53,7 +100,7 @@ export class Environment {
     scene.add(this.sun);
     scene.add(this.sun.target);
 
-    this.hemi = new THREE.HemisphereLight(0x9fd0ff, 0x1f5a78, 0.85);
+    this.hemi = new THREE.HemisphereLight(0x9fd0ff, 0x1f5a78, 0.55);
     scene.add(this.hemi);
 
     const fogColor = new THREE.Color(0xa9c8de);
@@ -68,5 +115,10 @@ export class Environment {
       fogColor: fogColor.clone(),
       fogDensity: 0.0011,
     };
+  }
+
+  update(time: number) {
+    const t = this.sky.material.uniforms.time;
+    if (t) t.value = time;
   }
 }
