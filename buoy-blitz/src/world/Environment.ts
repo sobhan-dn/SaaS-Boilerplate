@@ -31,10 +31,11 @@ export class Environment {
       su.cloudScale.value = 0.00025;
       su.cloudSpeed.value = 0.02;
     }
-    // The sky is rendered into HDR half-float targets; clamp the sun disc so it cannot overflow to inf/NaN.
+    // The sky is rendered into HDR half-float targets; scale it to the same range as the analytic
+    // lighting dome (~0.4-0.9) and clamp the sun disc so it cannot overflow to inf/NaN or swamp the bloom.
     this.sky.material.fragmentShader = this.sky.material.fragmentShader.replace(
       'gl_FragColor = vec4( texColor, 1.0 );',
-      'gl_FragColor = vec4( min( texColor, vec3( 3.0 ) ), 1.0 );',
+      'gl_FragColor = vec4( min( texColor * 0.5, vec3( 2.5 ) ), 1.0 );',
     );
     this.sky.material.needsUpdate = true;
 

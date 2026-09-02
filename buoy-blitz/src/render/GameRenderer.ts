@@ -45,7 +45,7 @@ export class GameRenderer {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.92;
     this.renderer.shadowMap.enabled = quality.shadows;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.setClearColor(0x87b8d6, 1);
 
@@ -64,7 +64,9 @@ export class GameRenderer {
     this.composer = new EffectComposer(this.renderer, compositeRT);
 
     if (quality.bloom) {
-      this.composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.38, 0.5, 1.45));
+      // Bloom runs on linear HDR values: the sky alone sits around 1.0, so only real highlights
+      // (sun glints, neon, boost cores, flames) may cross the threshold or the whole frame washes out.
+      this.composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.35, 0.4, 1.3));
     }
     this.composer.addPass(new OutputPass());
     if (quality.fxaa) this.composer.addPass(new FXAAPass());
