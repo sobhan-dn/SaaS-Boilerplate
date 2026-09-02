@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Buoy Blitz - Inflatable Boat Ball</title>
+    <meta name="description" content="A physics-driven 2v2 inflatable-boat ball game with realistic water simulation." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Rubik:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/ui/styles.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div id="hud" class="hud hidden">
+      <div class="scoreboard">
+        <div class="score blue"><span class="team-name">BLUE</span><span id="score-blue" class="score-num">0</span></div>
+        <div class="clock"><span id="clock">5:00</span><span id="clock-tag" class="clock-tag"></span></div>
+        <div class="score orange"><span id="score-orange" class="score-num">0</span><span class="team-name">ORANGE</span></div>
+      </div>
+
+      <div class="shape-panel">
+        <div class="shape-ring">
+          <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="44" /><circle id="shape-progress" class="progress" cx="50" cy="50" r="44" /></svg>
+          <div id="shape-icon" class="shape-icon"></div>
+        </div>
+        <div class="shape-text">
+          <div class="shape-label">BALL SHAPE</div>
+          <div id="shape-name" class="shape-name">Sphere</div>
+          <div class="shape-next">next: <span id="shape-next">Cube</span> in <span id="shape-countdown">8</span>s</div>
+        </div>
+      </div>
+
+      <div class="boost-panel">
+        <div class="boost-gauge">
+          <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42" /><circle id="boost-progress" class="progress" cx="50" cy="50" r="42" /></svg>
+          <div class="boost-value"><span id="boost-num">33</span></div>
+          <div class="boost-label">BOOST</div>
+        </div>
+        <div class="speed"><span id="speed-num">0</span><small>km/h</small></div>
+      </div>
+
+      <div id="center-msg" class="center-msg"></div>
+      <div id="sub-msg" class="sub-msg"></div>
+      <div id="goal-banner" class="goal-banner hidden"><div class="goal-text">GOAL!</div><div id="goal-scorer" class="goal-scorer"></div></div>
+      <div id="event-feed" class="event-feed"></div>
+    </div>
+
+    <div id="menu" class="overlay">
+      <div class="menu-card">
+        <div class="logo">
+          <div class="logo-badge">🛟</div>
+          <h1>BUOY<span>BLITZ</span></h1>
+          <p class="tagline">2v2 inflatable-boat ball. Real water. Real physics. Shifting ball.</p>
+        </div>
+        <div class="menu-grid">
+          <div class="menu-section">
+            <h3>Controls</h3>
+            <ul class="controls">
+              <li><kbd>W</kbd><kbd>S</kbd> throttle / reverse</li>
+              <li><kbd>A</kbd><kbd>D</kbd> steer (yaw in air)</li>
+              <li><kbd>Space</kbd> jump &middot; again for a dodge flip</li>
+              <li><kbd>Shift</kbd> boost / dash</li>
+              <li><kbd>Q</kbd><kbd>E</kbd> air roll</li>
+              <li><kbd>C</kbd> ball cam toggle &middot; <kbd>Esc</kbd> pause</li>
+              <li><span class="pad">🎮</span> gamepad supported</li>
+            </ul>
+          </div>
+          <div class="menu-section">
+            <h3>Match</h3>
+            <label>Duration
+              <select id="opt-duration">
+                <option value="180">3 minutes</option>
+                <option value="300" selected>5 minutes</option>
+                <option value="420">7 minutes</option>
+              </select>
+            </label>
+            <label>Ball morph interval
+              <select id="opt-morph">
+                <option value="5">every 5 s</option>
+                <option value="8" selected>every 8 s</option>
+                <option value="12">every 12 s</option>
+                <option value="0">never</option>
+              </select>
+            </label>
+            <label>Bot difficulty
+              <select id="opt-difficulty">
+                <option value="0.5">Rookie</option>
+                <option value="0.8" selected>Pro</option>
+                <option value="1.0">All-Star</option>
+              </select>
+            </label>
+            <label>Graphics
+              <select id="opt-quality">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high" selected>High</option>
+                <option value="ultra">Ultra</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <button id="btn-play" class="btn-primary">PLAY</button>
+        <div id="loading" class="loading">Loading physics&hellip;</div>
+      </div>
+    </div>
+
+    <div id="pause" class="overlay hidden">
+      <div class="menu-card small">
+        <h2>Paused</h2>
+        <button id="btn-resume" class="btn-primary">Resume</button>
+        <button id="btn-quit" class="btn-secondary">Quit to menu</button>
+      </div>
+    </div>
+
+    <div id="result" class="overlay hidden">
+      <div class="menu-card small">
+        <h2 id="result-title">Blue Wins!</h2>
+        <div id="result-score" class="result-score">3 - 2</div>
+        <div id="result-stats" class="result-stats"></div>
+        <button id="btn-rematch" class="btn-primary">Rematch</button>
+        <button id="btn-menu" class="btn-secondary">Main menu</button>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

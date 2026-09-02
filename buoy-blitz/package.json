@@ -1,0 +1,22 @@
+{
+  "name": "buoy-blitz",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Buoy Blitz - a physics-driven 2v2 inflatable-boat ball game with realistic water simulation",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.20.0",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2"
+  }
+}
