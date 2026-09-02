@@ -98,12 +98,12 @@ export class Boat {
     wakeTexture ??= makeWakeTexture();
     this.wake = new Trail({
       maxPoints: 60,
-      life: 2.6,
-      startWidth: 1.0,
-      endWidth: 3.2,
+      life: 2.2,
+      startWidth: 1.3,
+      endWidth: 2.8,
       onSurface: true,
       minSpacing: 0.35,
-      material: makeTrailMaterial(wakeTexture, new THREE.Color(1, 1, 1), false, 0.42),
+      material: makeTrailMaterial(wakeTexture, new THREE.Color(1, 1, 1), false, 0.55),
     });
     scene.add(this.wake.mesh);
   }
@@ -320,7 +320,9 @@ export class Boat {
     // ---------------- effects ----------------
     if (this.inWater) {
       const hs = Math.hypot(this.velocity.x, this.velocity.z);
-      fx.ripple.addEmitter(this.position.x, this.position.z, 1.1 + hs * 0.02, -0.035 * THREE.MathUtils.clamp(hs / 10, 0.2, 1.4) * s);
+      // Continuous source: steady-state height ~ strength / (1 - damping), so keep this small
+      // (≈0.1 m of hull depression at speed) or the sim saturates into a foam blob.
+      fx.ripple.addEmitter(this.position.x, this.position.z, 1.1 + hs * 0.02, -0.0055 * THREE.MathUtils.clamp(hs / 10, 0.2, 1.4) * s);
       if (hs > 3) {
         const stern = this.tmpV.set(0, 0, -1.2).applyQuaternion(this.quaternion).add(this.position);
         const dir = this.tmpV2.set(this.velocity.x, 0, this.velocity.z).normalize();

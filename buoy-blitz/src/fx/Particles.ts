@@ -13,7 +13,8 @@ void main() {
   vColor = aColor;
   vAlpha = aAlpha;
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  gl_PointSize = aSize * uScale / max(-mv.z, 0.5);
+  // Perspective-correct world-size sprites, capped so particles brushing the lens never fill the screen.
+  gl_PointSize = min(aSize * uScale / max(-mv.z, 1.0), 72.0);
   gl_Position = projectionMatrix * mv;
 }
 `;
@@ -98,7 +99,8 @@ export class ParticleSystem {
   }
 
   setViewportHeight(h: number) {
-    this.material.uniforms.uScale.value = h * 0.6;
+    // ~ h / (2 * tan(fov/2)) for the 76-88° chase camera, so aSize is a world-space diameter.
+    this.material.uniforms.uScale.value = h * 0.5;
   }
 
   emit(o: EmitOptions) {

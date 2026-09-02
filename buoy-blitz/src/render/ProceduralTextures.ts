@@ -363,18 +363,31 @@ export function makeWakeTexture(): THREE.CanvasTexture {
     128,
     128,
     (ctx) => {
+      // Kelvin-style wake: two bright foam edges with a faint, streaky turbulent centre.
       const g = ctx.createLinearGradient(0, 0, 128, 0);
       g.addColorStop(0, 'rgba(255,255,255,0)');
-      g.addColorStop(0.5, 'rgba(255,255,255,1)');
+      g.addColorStop(0.1, 'rgba(255,255,255,0.85)');
+      g.addColorStop(0.24, 'rgba(255,255,255,0.18)');
+      g.addColorStop(0.5, 'rgba(255,255,255,0.08)');
+      g.addColorStop(0.76, 'rgba(255,255,255,0.18)');
+      g.addColorStop(0.9, 'rgba(255,255,255,0.85)');
       g.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, 128, 128);
-      for (let i = 0; i < 400; i++) {
-        ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.5})`;
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      for (let i = 0; i < 90; i++) {
+        const x = 20 + Math.random() * 88;
+        const y = Math.random() * 128;
+        ctx.fillRect(x, y, 1 + Math.random() * 2, 6 + Math.random() * 22);
+      }
+      ctx.globalCompositeOperation = 'destination-out';
+      for (let i = 0; i < 260; i++) {
+        ctx.fillStyle = `rgba(0,0,0,${0.25 + Math.random() * 0.6})`;
         ctx.beginPath();
         ctx.arc(Math.random() * 128, Math.random() * 128, 2 + Math.random() * 5, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.globalCompositeOperation = 'source-over';
     },
     false,
   );

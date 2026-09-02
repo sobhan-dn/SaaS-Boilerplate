@@ -56,8 +56,8 @@ export class BoostPads {
 
   private addPad(x: number, z: number, big: boolean) {
     const mesh = new THREE.Group();
-    const rr = big ? 1.5 : 0.85;
-    const tube = big ? 0.32 : 0.2;
+    const rr = big ? 1.35 : 0.7;
+    const tube = big ? 0.3 : 0.17;
     const ring = new THREE.Mesh(new THREE.TorusGeometry(rr, tube, 14, 36), big ? this.bigMat : this.smallMat);
     ring.rotation.x = Math.PI / 2;
     ring.castShadow = true;

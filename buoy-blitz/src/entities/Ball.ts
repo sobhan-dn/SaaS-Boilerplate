@@ -287,7 +287,7 @@ export class Ball {
       const hz = waterHeightAt(this.position.x, this.position.z + 0.5, time) - waterHeightAt(this.position.x, this.position.z - 0.5, time);
       b.addForce({ x: -hx * m * 2.5 * f, y: 0, z: -hz * m * 2.5 * f }, true);
       const hs = Math.hypot(this.velocity.x, this.velocity.z);
-      fx.ripple.addEmitter(this.position.x, this.position.z, rb * 0.9, -0.03 * f * THREE.MathUtils.clamp(hs / 6, 0.3, 1.5));
+      fx.ripple.addEmitter(this.position.x, this.position.z, rb * 0.9, -0.005 * f * THREE.MathUtils.clamp(hs / 6, 0.3, 1.5));
     } else {
       b.setAngularDamping(0.25);
     }
