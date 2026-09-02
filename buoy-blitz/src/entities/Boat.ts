@@ -84,8 +84,17 @@ export class Boat {
   ) {
     const desc = RAPIER.RigidBodyDesc.dynamic().setTranslation(0, 0, 0).setLinearDamping(0).setAngularDamping(1.5).setCcdEnabled(true);
     this.body = physics.world.createRigidBody(desc);
+    // Box inertia about the principal axes (x = pitch, y = yaw, z = roll). The centre of mass sits low in the
+    // hull (motor + ballast) so the buoyant centre stays above it and the boat has real metacentric stability;
+    // with the CoM at the geometric centre a hull heeled past ~45° would be pushed further over by its own lift.
+    const m = BOAT.mass;
+    const inertia = {
+      x: (m / 12) * (BOAT.height ** 2 + BOAT.length ** 2),
+      y: (m / 12) * (BOAT.width ** 2 + BOAT.length ** 2),
+      z: (m / 12) * (BOAT.width ** 2 + BOAT.height ** 2),
+    };
     const colDesc = RAPIER.ColliderDesc.roundCuboid(BOAT.width / 2 - 0.25, BOAT.height / 2 - 0.2, BOAT.length / 2 - 0.3, 0.25)
-      .setMass(BOAT.mass)
+      .setMassProperties(m, { x: 0, y: BOAT.comHeight, z: 0 }, inertia, { x: 0, y: 0, z: 0, w: 1 })
       .setRestitution(0.35)
       .setFriction(0.5)
       .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
@@ -171,7 +180,7 @@ export class Boat {
       // vertical velocity of this hull point: v + w x r
       const r = this.tmpV2.subVectors(p, this.position);
       const vpy = this.velocity.y + (angvel.z * r.x - angvel.x * r.z);
-      const damp = -(m / N_SAMPLES) * 4.5 * vpy;
+      const damp = -(m / N_SAMPLES) * 5.5 * vpy;
       b.addForceAtPoint({ x: 0, y: lift + damp, z: 0 }, { x: p.x, y: p.y, z: p.z }, true);
       submergedSum += Math.min(1, d / (2 * BOAT.restDraft));
     }
@@ -193,9 +202,18 @@ export class Boat {
       const lat = this.right.dot(this.velocity);
       const keel = -lat * m * BOAT.keelGrip * s;
       b.addForce({ x: this.right.x * keel, y: 0, z: this.right.z * keel }, true);
-      // righting torque + roll/pitch damping (low centre of gravity)
+      // righting torque + roll/pitch damping (low centre of gravity).
+      // |up x Y| = sin(angle) collapses to zero when capsized, so drive by the heel angle instead and roll
+      // about the keel when fully inverted, otherwise an upside-down hull is a stable equilibrium.
       const cross = this.tmpV2.crossVectors(this.up, WORLD_UP);
-      const k = m * BOAT.rightingTorque * 0.3 * s;
+      const sinA = cross.length();
+      const heel = Math.atan2(sinA, this.up.y);
+      if (sinA > 1e-3) cross.divideScalar(sinA);
+      else if (this.up.y < 0) cross.copy(this.forward);
+      else cross.set(0, 0, 0);
+      const restoring = Math.min(1.25, heel) * (this.up.y < 0 ? 1.8 : 1);
+      // do not let the assist fade as the hull lifts, or a rising bow feeds back into a stern-stand
+      const k = m * BOAT.rightingTorque * 0.3 * Math.max(0.7, s) * restoring;
       const yawRate = angvel.dot(this.up);
       const horizAng = this.tmpV.copy(angvel).addScaledVector(this.up, -yawRate);
       b.addTorque(
@@ -206,16 +224,18 @@ export class Boat {
       b.setLinearDamping(0);
 
       // ---------------- propulsion ----------------
-      const propLocal = this.tmpV.set(0, -0.15, -1.6).applyQuaternion(this.quaternion).add(this.position);
-      const propDepth = waterHeightAt(propLocal.x, propLocal.z, time) - (propLocal.y - 0.35);
+      // The propeller sits below the centre of mass so thrust trims the bow up (planing attitude).
+      const propLocal = this.tmpV.set(0, BOAT.comHeight - 0.04, -1.6).applyQuaternion(this.quaternion).add(this.position);
+      const propDepth = waterHeightAt(propLocal.x, propLocal.z, time) - (propLocal.y - 0.2);
       if (propDepth > 0 && this.demolished <= 0) {
         const fwdH = this.tmpV2.set(this.forward.x, 0, this.forward.z).normalize();
         const t = c.throttle > 0 ? c.throttle : c.throttle * BOAT.reverseFactor;
-        const thrust = m * BOAT.thrust * t * Math.min(1, propDepth / 0.3);
+        const thrust = m * BOAT.thrust * t * Math.min(1, propDepth / 0.25);
         b.addForceAtPoint({ x: fwdH.x * thrust, y: 0, z: fwdH.z * thrust }, { x: propLocal.x, y: propLocal.y, z: propLocal.z }, true);
 
         const fwdSpeed = this.forward.dot(this.velocity);
-        const speedFactor = THREE.MathUtils.clamp(Math.abs(fwdSpeed) / 6, 0.35, 1);
+        // an outboard steers by vectoring thrust, so it can still swing the stern when nearly stopped
+        const speedFactor = THREE.MathUtils.clamp(Math.abs(fwdSpeed) / 6, 0.55, 1);
         const dir = fwdSpeed >= -0.8 ? 1 : -1;
         const yawTorque = c.steer * m * BOAT.steerTorque * speedFactor * dir * s;
         // bank into the turn like a real hull

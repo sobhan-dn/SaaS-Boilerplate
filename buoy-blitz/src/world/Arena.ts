@@ -60,7 +60,8 @@ export class Arena {
       for (const sz of [1, -1]) {
         const cx = sx * (W2 - C / 2);
         const cz = sz * (L2 - C / 2);
-        const rot = sx * sz > 0 ? -Math.PI / 4 : Math.PI / 4;
+        // rotation about +Y maps local +X to (cos r, 0, -sin r); the cut in the (+x,+z) corner runs along (1, 0, -1)
+        const rot = sx * sz > 0 ? Math.PI / 4 : -Math.PI / 4;
         wall(cLen / 2 + 0.6, wallHy, 0.5, cx + sx * 0.35, wallCy, cz + sz * 0.35, rot);
       }
     }
@@ -181,7 +182,7 @@ export class Arena {
     const cLen = C * Math.SQRT2;
     for (const sx of [1, -1]) {
       for (const sz of [1, -1]) {
-        const rot = sx * sz > 0 ? -Math.PI / 4 : Math.PI / 4;
+        const rot = sx * sz > 0 ? Math.PI / 4 : -Math.PI / 4;
         addPanel(cLen, sx * (W2 - C / 2), sz * (L2 - C / 2), rot);
       }
     }

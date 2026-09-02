@@ -27,6 +27,7 @@ export class BoatAI {
   private jitterTimer = 0;
   private stuckTimer = 0;
   private reverseTimer = 0;
+  private reverseSteer = 1;
   private dodgeTimer = -1;
   private jumpCooldown = 0;
   private target = new THREE.Vector3();
@@ -132,7 +133,16 @@ export class BoatAI {
     const angle = Math.atan2(toT.x * rightX + toT.z * rightZ, toT.x * fwd.x + toT.z * fwd.z);
     let steer = THREE.MathUtils.clamp(angle * 1.9, -1, 1);
     let throttle = 1;
-    if (Math.abs(angle) > 2.1 && dist < 9) {
+    // Nosed into a wall: a hull cannot pivot on the spot, so back out while turning toward the target.
+    const nearWallX = ARENA.width / 2 - Math.abs(b.position.x) < 4.5 && Math.sign(fwd.x) === Math.sign(b.position.x) && Math.abs(fwd.x) > 0.45;
+    const nearWallZ = L2 - Math.abs(b.position.z) < 4.5 && Math.sign(fwd.z) === Math.sign(b.position.z) && Math.abs(fwd.z) > 0.45;
+    const inGoalMouth = Math.abs(b.position.x) < ARENA.goalWidth / 2 + 1 && Math.abs(b.position.z) > L2 - 1;
+    const wallAhead = (nearWallX || nearWallZ) && !inGoalMouth && b.speed < 9 && Math.abs(angle) > 0.9;
+    if (wallAhead || (Math.abs(angle) > 1.7 && b.speed < 6)) {
+      // three-point turn: reverse with the rudder flipped, which swings the bow toward the target
+      throttle = -1;
+      steer = -Math.sign(angle || 1);
+    } else if (Math.abs(angle) > 2.1 && dist < 9) {
       throttle = -1;
       steer = -steer;
     } else if (this.role === 'defend' && dist < 7) {
@@ -149,14 +159,15 @@ export class BoatAI {
     // stuck handling
     if (b.speed < 1.2 && Math.abs(throttle) > 0.5 && b.inWater) this.stuckTimer += dt;
     else this.stuckTimer = 0;
-    if (this.stuckTimer > 1.8) {
-      this.reverseTimer = 1.1;
+    if (this.stuckTimer > 1.2) {
+      this.reverseTimer = 1.6;
+      this.reverseSteer = angle > 0 ? -1 : 1;
       this.stuckTimer = 0;
     }
     if (this.reverseTimer > 0) {
       this.reverseTimer -= dt;
       throttle = -1;
-      steer = -steer;
+      steer = this.reverseSteer;
     }
 
     // ---- boost

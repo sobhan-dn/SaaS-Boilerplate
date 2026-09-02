@@ -23,10 +23,12 @@ export const BOAT = {
   mass: 190,
   /** Draft at rest (meters of hull under water when floating). */
   restDraft: 0.34,
+  /** Centre of mass height in hull-local space; below the buoyancy samples for metacentric stability. */
+  comHeight: -0.6,
   thrust: 14.5, // m/s^2 at full throttle
   reverseFactor: 0.55,
-  steerTorque: 2.6, // rad/s^2 scale
-  keelGrip: 3.2, // lateral velocity damping /s
+  steerTorque: 6.0, // rad/s^2 scale
+  keelGrip: 6.5, // lateral velocity damping /s
   maxSpeed: 25,
   maxBoostSpeed: 34.5,
   boostAccel: 16.5,
